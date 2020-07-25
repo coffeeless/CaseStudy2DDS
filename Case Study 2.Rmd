@@ -1,0 +1,52 @@
+---
+title: "Case Study 2"
+author: "Carl Keusseyan"
+date: "7/23/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(magrittr)
+library(dplyr)
+library(tidyr)
+library(forcats)
+library(matrixStats)
+library(GGally)
+library(caret)
+library(corrplot)
+library(cowplot)
+library(ggExtra)
+library(ggthemes)
+library(maps)
+library(usmap)
+library(naniar)
+library(olsrr)
+library(stringr)
+library(e1071)
+library(FNN)
+library(MASS)
+library(ggthemes)
+library(caret)
+library(e1071)
+library(reshape2)
+library(RANN)
+```
+
+```{r}
+# pulling in datasets
+df <- read.csv("CaseStudy2-data.csv")
+
+# check the structure
+str(df)
+
+# check for missing data
+gg_miss_var(df)  # >> looking at the plot we can see that there is no missing data 
+
+
+
+
+
+```
+
