@@ -7,6 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Load the libraries
 library(ggplot2)
 library(magrittr)
 library(dplyr)
@@ -32,21 +34,230 @@ library(caret)
 library(e1071)
 library(reshape2)
 library(RANN)
+library(esquisse)
+
 ```
 
 ```{r}
-# pulling in datasets
+# pulling in datasets ----
 df <- read.csv("CaseStudy2-data.csv")
 
-# check the structure
+# check the structure of the dataset
 str(df)
 
 # check for missing data
-gg_miss_var(df)  # >> looking at the plot we can see that there is no missing data 
+gg_miss_var(df)  # looking at the plot we can see that there is no missing data 
+
+```
+
+```{r}
+# Predict Attrition
+# Plotting to look for patterns in the data ----
+
+# Intersting to note the Environment Satisfaction effect on Attrition
+ggplot(df) +
+ aes(x = MonthlyIncome, y = EnvironmentSatisfaction, fill = Attrition) +
+ geom_point(size = 1L, colour = "#0c4c8a") +
+ geom_smooth(span = 0.75) +
+ scale_fill_brewer(palette = "Set1") +
+ labs(x = "Monthly Income", y = "Environment Satisfaction", title = "Monthly Income / Environment Satisfaction", subtitle = "Colored by Attrition", caption = "Intersting to note the Environment Satisfaction effect on Attrition", fill = "Attrition") +
+theme_minimal()
+
+# Intersting to note the Years At Company effect on Attrition
+ggplot(df) +
+ aes(x = MonthlyIncome, y = YearsAtCompany, fill = Attrition) +
+ geom_point(size = 1L, colour = "#0c4c8a") +
+ geom_smooth(span = 0.75) +
+ scale_fill_brewer(palette = "Set1") +
+ labs(x = "Monthly Income", y = "Years At Company", title = "Monthly Income / Years At Company", subtitle = "Colored by Attrition", caption = "Intersting to note the Years At Company effect on Attrition", fill = "Attrition") +
+theme_minimal()
+
+# Intersting to note the Work Life Balance effect on Attrition
+ggplot(df) +
+ aes(x = MonthlyIncome, y = WorkLifeBalance, fill = Attrition) +
+ geom_point(size = 1L, colour = "#0c4c8a") +
+ geom_smooth(span = 0.75) +
+ scale_fill_brewer(palette = "Set1") +
+ labs(x = "Monthly Income", y = "Work Life Balance", title = "Monthly Income / Work Life Balance", subtitle = "Colored by Attrition", caption = "Intersting to note the Work Life Balance effect on Attrition", fill = "Attrition") +
+theme_minimal()
+
+# Intersting to note the Distance From Home effect on Attrition
+ggplot(df) +
+ aes(x = MonthlyIncome, y = DistanceFromHome, fill = Attrition) +
+ geom_point(size = 1L, colour = "#0c4c8a") +
+ geom_smooth(span = 0.75) +
+ scale_fill_brewer(palette = "Set1") +
+ labs(x = "Monthly Income", y = "Distance From Home", title = "Monthly Income / Distance From Home", subtitle = "Colored by Attrition", caption = "Intersting to note the Distance From Home effect on Attrition", fill = "Attrition") +
+theme_minimal()
+
+# Intersting to note the Stock Option Level effect on Attrition
+ggplot(df) +
+ aes(x = MonthlyIncome, y = StockOptionLevel, fill = Attrition) +
+ geom_point(size = 1L, colour = "#0c4c8a") +
+ geom_smooth(span = 0.75) +
+ scale_fill_brewer(palette = "Set1") +
+ labs(x = "Monthly Income", y = "Stock Option Level", title = "Monthly Income / Stock Option Level", subtitle = "Colored by Attrition", caption = "Intersting to note the Stock Option Level effect on Attrition", fill = "Attrition") +
+theme_minimal()
+
+```
 
 
+```{r}
+#***** KNN ***** ----
 
+# try 1 EnvironmentSatisfaction, MonthlyIncome, YearsAtCompany ----
+df1 <- df %>% dplyr::select(EnvironmentSatisfaction, MonthlyIncome, YearsAtCompany, Attrition)
+
+#Internal CV
+classifications = knn.cv(df1[,1:3],df1$Attrition, k = 3)
+confusionMatrix(classifications,df1$Attrition)
+# K=3           Accuracy : 0.8
+#            Sensitivity : 0.9288          
+#            Specificity : 0.1286 
+
+classifications = knn.cv(df1[,1:3],df1$Attrition, k = 20)
+confusionMatrix(classifications,df1$Attrition)
+# k=20          Accuracy : 0.8391 
+#            Sensitivity : 0.99178         
+#            Specificity : 0.04286
+
+
+# try 2 EnvironmentSatisfaction, MonthlyIncome, YearsAtCompany, WorkLifeBalance ----
+df2 <- df %>% dplyr::select(EnvironmentSatisfaction, MonthlyIncome, YearsAtCompany, WorkLifeBalance, Attrition)
+
+#Internal CV
+classifications = knn.cv(df2[,1:4],df2$Attrition, k = 3)
+confusionMatrix(classifications,df1$Attrition)
+# K=3           Accuracy : 0.8011
+#            Sensitivity : 0.9301          
+#            Specificity : 0.1286 
+
+classifications = knn.cv(df2[,1:4],df2$Attrition, k = 20)
+confusionMatrix(classifications,df2$Attrition)
+# k=20          Accuracy : 0.8391
+#            Sensitivity : 0.99178         
+#            Specificity : 0.04286
+
+
+# try 3 EnvironmentSatisfaction, MonthlyIncome, YearsAtCompany, StockOptionLevel, DistanceFromHome, WorkLifeBalance ----
+df3 <- df %>% dplyr::select(EnvironmentSatisfaction, MonthlyIncome, YearsAtCompany, StockOptionLevel, DistanceFromHome, WorkLifeBalance, Attrition)
+
+#Internal CV
+classifications = knn.cv(df3[,1:6],df3$Attrition, k = 3)
+confusionMatrix(classifications,df3$Attrition)
+#  K=3          ccuracy : 0.8207                **********************
+#           Sensitivity : 0.9479                ***** Conclusion: this gives the best results in highest Specifity 
+#           Specificity : 0.1571                ****************  while very high accuracy and Sensitivity
+
+classifications = knn.cv(df3[,1:6],df3$Attrition, k = 4)
+confusionMatrix(classifications,df3$Attrition)
+#  K=4          ccuracy : 0.831
+#           Sensitivity : 0.98219         
+#           Specificity : 0.04286   
+
+classifications = knn.cv(df3[,1:6],df3$Attrition, k = 20)
+confusionMatrix(classifications,df3$Attrition)           
+# k =20         Accuracy : 0.8379 
+#            Sensitivity : 0.99041         
+#            Specificity : 0.04286
+
+
+# try 4 EnvironmentSatisfaction, MonthlyIncome, YearsAtCompany, StockOptionLevel, DistanceFromHome, WorkLifeBalance, MaritalStatus, Gender ----
+df4 <- df %>% dplyr::select(EnvironmentSatisfaction, MonthlyIncome, YearsAtCompany, StockOptionLevel, DistanceFromHome, WorkLifeBalance, MaritalStatus, Gender, Attrition)
+df4$MaritalStatus = as.integer(factor(df4$MaritalStatus))
+df4$Gender = as.integer(factor(df4$Gender))
+
+#Internal CV
+classifications = knn.cv(df4[,1:8],df4$Attrition, k = 3)
+confusionMatrix(classifications,df4$Attrition)
+#  K=3          ccuracy : 0.8207
+#           Sensitivity : 0.9479          
+#           Specificity : 0.1571  
+
+# NO appretiable difference than Try2
 
 
 ```
+
+```{r}
+# KNN Predict ----
+dfp <- read.csv("CaseStudy2CompSet No Attrition.csv")
+dfp1 <- dfp %>% dplyr::select(EnvironmentSatisfaction, MonthlyIncome, YearsAtCompany, StockOptionLevel, DistanceFromHome, WorkLifeBalance)
+
+# Predict
+knnpredictions <- knn(df3[,-7],dfp1, df3$Attrition, k=3)
+knnpredictionsdf = data.frame(knnpredictions)
+knnresults = cbind(ID = dfp$ID, Attrition = knnpredictionsdf)
+
+# write it out
+write.csv(knnresults[,1:2], file="Case2PredictionsKeusseyan Attrition.csv")
+
+```
+
+
+```{r}
+# Predict Monthly Income
+# Plotting to look for patterns in the data ----
+
+# Intersting to note the Total Working Years effect on Monthly Income
+ggplot(df) +
+ aes(x = TotalWorkingYears, y = MonthlyIncome) +
+ geom_point(size = 1L, colour = "#0c4c8a") +
+ geom_smooth(span = 0.75) +
+ scale_fill_brewer(palette = "Set1") +
+ labs(x = "Total Working Years", y = "Monthly Income", title = "Total Working Years / Monthly Income", caption = "Intersting to note the Total Working Years effect on Monthly Income") +
+theme_minimal()
+
+# Intersting to note the Job Level effect on Monthly Income
+ggplot(df) +
+ aes(x = JobLevel, y = MonthlyIncome) +
+ geom_point(size = 1L, colour = "#0c4c8a") +
+ geom_smooth(span = 0.75) +
+ scale_fill_brewer(palette = "Set1") +
+ labs(x = "Job Level", y = "Monthly Income", title = "Job Level / Monthly Income", caption = "Intersting to note the Job Level effect on Monthly Income") +
+theme_minimal()
+
+```
+
+
+```{r}
+# ***** Linear Model ***** ----
+# Choose the dataset 
+dflm = df %>% dplyr::select(MonthlyIncome, TotalWorkingYears, JobLevel, JobRole)  
+
+# Set Seed and Train/test sets 
+set.seed(4)
+splitperc = 0.70
+index<- sample(1:dim(dflm)[1],round(splitperc*dim(dflm)[1]),replace=F)
+train<- dflm[index,]
+test<- dflm[-index,]
+
+# linear model
+linearmodel <- lm(MonthlyIncome ~ TotalWorkingYears + JobLevel + JobRole, data = train)
+summary(linearmodel) # Results: Adjusted R-squared:  0.9443
+ols_plot_resid_fit(linearmodel)
+ols_plot_resid_lev(linearmodel)
+ols_plot_resid_qq(linearmodel)
+ols_plot_resid_hist(linearmodel)
+ols_plot_cooksd_bar(linearmodel)
+
+# Predict
+predictions <- linearmodel %>% predict(test)
+
+# Get RMSE
+dfRMSE = RMSE(predictions,test$MonthlyIncome)   # RMSE of 1055.184
+
+# LM Predict
+dfpp <- read.csv("CaseStudy2CompSet No Salary.csv")
+predictions <- predict.lm(linearmodel, dfpp)
+predictionsdf = data.frame(predictions)
+dfresults = cbind(ID = dfpp$ID, MonthlyIncome = predictionsdf)
+
+# write it out
+write.csv(dfresults[,1:2], file="Case2PredictionsKeusseyan Salary.csv")
+
+```
+
+
+
 
