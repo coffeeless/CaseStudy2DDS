@@ -49,6 +49,52 @@ str(df)
 gg_miss_var(df)  # looking at the plot we can see that there is no missing data 
 
 ```
+```{r}
+#>>>>> Analysis ----
+
+
+library(ggplot2)
+
+ggplot(df) +
+ aes(x = JobRole, y = MonthlyIncome) +
+ geom_violin(adjust = 1L, scale = "area", fill = "#fde725") +
+ labs(x = "Job Role", y = "Monthly Income", title = "Monthly Income by Rob Role", subtitle = "Violin Plot", caption = "Managers & Research Directors, on the avergae, make the most  monthly income") +
+ theme_minimal()
+
+ggplot(df) +
+ aes(x = Department, y = JobSatisfaction, fill = Gender) +
+ geom_boxplot() +
+ scale_fill_hue() +
+ labs(x = "Deparment", y = "Job Satisfaction", title = "Job Satisfactioin by Department colored by Gender", subtitle = "Boxplot", caption = "Males in Huma Resources, on the average, have less Job Satsifaction than others. ") +
+ theme_minimal()
+
+df %>%
+ filter(BusinessTravel %in% "Travel_Frequently") %>%
+ ggplot() +
+ aes(x = JobRole, fill = BusinessTravel) +
+ geom_bar() +
+ scale_fill_hue() +
+ labs(x = "Job Role", title = "Job Role colored by Frequent Business Travel", subtitle = "Bar Graph", caption = "Sales Executives and Laboratory Technicians travel the most", fill = "Business Travel") +
+ coord_flip() +
+ theme_minimal()
+
+ggplot(df) +
+ aes(x = JobRole, y = Age) +
+ geom_boxplot(fill = "#fde725") +
+ labs(x = "Job Role", title = "Age by Job Role", subtitle = "Boxplot", caption = "Managers and Research Directors tend to be older") +
+ coord_flip() +
+ theme_minimal()
+
+ggplot(df) +
+ aes(x = JobRole, y = PercentSalaryHike, fill = Gender) +
+ geom_boxplot() +
+ scale_fill_hue() +
+ labs(x = "Job Role", y = "% Salary Hike", title = "% Salary Hike by Job Role Colored by Gender", subtitle = "Boxplot", caption = "Female Human Resources receive the least Salary Hike") +
+ coord_flip() +
+ theme_minimal()
+
+#>>>>>
+```
 
 ```{r}
 # Predict Attrition
