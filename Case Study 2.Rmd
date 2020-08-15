@@ -18,6 +18,7 @@ library(matrixStats)
 library(GGally)
 library(caret)
 library(corrplot)
+library(esquisse)
 library(cowplot)
 library(ggExtra)
 library(ggthemes)
@@ -29,12 +30,10 @@ library(stringr)
 library(e1071)
 library(FNN)
 library(MASS)
-library(ggthemes)
 library(caret)
 library(e1071)
 library(reshape2)
 library(RANN)
-library(esquisse)
 
 ```
 
@@ -49,58 +48,83 @@ str(df)
 gg_miss_var(df)  # looking at the plot we can see that there is no missing data 
 
 ```
+
+
 ```{r}
 #>>>>> Analysis ----
 
+# try 1 - let us plot pairs to see if there is any patterns immerging between variables
+# Observationis: Some pairs show some corealtion  - expanding the nuimber of pairs
+dfa1 <- df %>% dplyr::select(JobSatisfaction, OverTime, StockOptionLevel, TotalWorkingYears, YearsSinceLastPromotion, Attrition)
+pairs(dfa1)
 
-library(ggplot2)
+# try 1 - let us plot more pairs to see if theire is any patterns immerging between variables
+# Observationis: Some pairs show some corealtion 
+dfa2<- df %>% dplyr::select(JobSatisfaction, OverTime, StockOptionLevel, TotalWorkingYears, YearsSinceLastPromotion, EnvironmentSatisfaction, JobInvolvement, NumCompaniesWorked, TrainingTimesLastYear, Attrition)
+pairs(dfa2)
 
+# Let us dive into the data and investigate the ones that are shwoing some corelation
+
+# Let us see which Job role makes the most Monthly Income
+# Observation: Managers & Research Directors, on the average, make the most Monthly Income
 ggplot(df) +
  aes(x = JobRole, y = MonthlyIncome) +
- geom_violin(adjust = 1L, scale = "area", fill = "#fde725") +
- labs(x = "Job Role", y = "Monthly Income", title = "Monthly Income by Rob Role", subtitle = "Violin Plot", caption = "Managers & Research Directors, on the avergae, make the most  monthly income") +
+ geom_violin(adjust = 1L, scale = "area", fill = "#0c4c8a") +
+ labs(title = "Monthly Income by Job Role", subtitle = "Violin Plot", caption = "Managers & Research Directors, on the average, make the most Monthly Income") +
+ coord_flip() +
  theme_minimal()
 
+# Let us see which Job role stays in the company the longest
+# Observation: Managers & Research Directors, on the average, stay in the company the longest
 ggplot(df) +
- aes(x = Department, y = JobSatisfaction, fill = Gender) +
+ aes(x = JobRole, y = YearsAtCompany) +
+ geom_boxplot(fill = "#c6dbef") +
+ labs(title = "Years At Company by Job Role", subtitle = "Boxplot", caption = "Managers and Research Directors, on the average, stay in the company longer") +
+ coord_flip() +
+ theme_minimal()
+
+# Let us see if there is a gender difference in Monthly INcome and Job Role
+# Observation: Female Research Directors, on the average, make more Monthly Income than their Male counterparts
+ggplot(df) +
+ aes(x = JobRole, y = MonthlyIncome, fill = Gender) +
  geom_boxplot() +
  scale_fill_hue() +
- labs(x = "Deparment", y = "Job Satisfaction", title = "Job Satisfactioin by Department colored by Gender", subtitle = "Boxplot", caption = "Males in Huma Resources, on the average, have less Job Satsifaction than others. ") +
- theme_minimal()
-
-df %>%
- filter(BusinessTravel %in% "Travel_Frequently") %>%
- ggplot() +
- aes(x = JobRole, fill = BusinessTravel) +
- geom_bar() +
- scale_fill_hue() +
- labs(x = "Job Role", title = "Job Role colored by Frequent Business Travel", subtitle = "Bar Graph", caption = "Sales Executives and Laboratory Technicians travel the most", fill = "Business Travel") +
+ labs(title = "Monthly Income by Job Role by Gender", subtitle = "Boxplot", caption = "Female Research Directors, on the average, make more Monthly Income than their Male counterparts") +
  coord_flip() +
  theme_minimal()
 
+# Let us see Job Satisfaction by Job Role / Overtime
+# Observation: ust because you get Overtime does not necessarily mean you have Job Satisfaction
 ggplot(df) +
- aes(x = JobRole, y = Age) +
- geom_boxplot(fill = "#fde725") +
- labs(x = "Job Role", title = "Age by Job Role", subtitle = "Boxplot", caption = "Managers and Research Directors tend to be older") +
- coord_flip() +
- theme_minimal()
-
-ggplot(df) +
- aes(x = JobRole, y = PercentSalaryHike, fill = Gender) +
+ aes(x = JobRole, y = JobSatisfaction, fill = OverTime) +
  geom_boxplot() +
  scale_fill_hue() +
- labs(x = "Job Role", y = "% Salary Hike", title = "% Salary Hike by Job Role Colored by Gender", subtitle = "Boxplot", caption = "Female Human Resources receive the least Salary Hike") +
+ labs(title = "Job Satisfaction by Job Role / Overtime", subtitle = "Boxplot", caption = "Just because you get Overtime does not necessarily mean you have Job Satisfaction") +
  coord_flip() +
  theme_minimal()
 
-#>>>>>
-```
+# Let us see Job Satisfaction by Job Role / Attrition
+#observations: Job Satisfaction plays a role in Attrition
+ggplot(df) +
+ aes(x = JobRole, y = JobSatisfaction, fill = Attrition) +
+ geom_boxplot() +
+ scale_fill_hue() +
+ labs(title = "Job Satisfaction by Job Role / Attrition", subtitle = "Boxplot", caption = "Job Satisfaction plays a role in Attrition") +
+ coord_flip() +
+ theme_minimal()
 
-```{r}
-# Predict Attrition
-# Plotting to look for patterns in the data ----
+# let us see Work Life Balance by Monthly Income / Attrition
+# Observations: Work Life Balance appears to have a role in Attrition (more work Life Balance less Attrition)
+ggplot(df) +
+ aes(x = MonthlyIncome, y = WorkLifeBalance, fill = Attrition) +
+ geom_point(size = 1L, colour = "#0c4c8a") +
+ geom_smooth(span = 1L) +
+ scale_fill_hue() +
+ labs(title = "Work Life Balance by Monthly Income / Attrition", subtitle = "Scatter Plot with Trend Line", caption = "Work Life Balance appears to have a role in Attrition (more work Life Balance less Attrition)") +
+ theme_minimal()
 
-# Intersting to note the Environment Satisfaction effect on Attrition
+# let us see Monthly Income / Environment Satisfaction
+# Observations:# Intersting to note the Environment Satisfaction effect on Attrition (more Environment Satisfaction less Attrition)
 ggplot(df) +
  aes(x = MonthlyIncome, y = EnvironmentSatisfaction, fill = Attrition) +
  geom_point(size = 1L, colour = "#0c4c8a") +
@@ -109,25 +133,38 @@ ggplot(df) +
  labs(x = "Monthly Income", y = "Environment Satisfaction", title = "Monthly Income / Environment Satisfaction", subtitle = "Colored by Attrition", caption = "Intersting to note the Environment Satisfaction effect on Attrition", fill = "Attrition") +
 theme_minimal()
 
-# Intersting to note the Years At Company effect on Attrition
+# let us see Distance From Home by Environmental Satisfaction / Attrition
+# Observations: Distance From Home appears to have a role in Attrition (more Distance From Home more Attrition)
 ggplot(df) +
- aes(x = MonthlyIncome, y = YearsAtCompany, fill = Attrition) +
+ aes(x = EnvironmentSatisfaction, y = DistanceFromHome, fill = Attrition) +
  geom_point(size = 1L, colour = "#0c4c8a") +
- geom_smooth(span = 0.75) +
- scale_fill_brewer(palette = "Set1") +
- labs(x = "Monthly Income", y = "Years At Company", title = "Monthly Income / Years At Company", subtitle = "Colored by Attrition", caption = "Intersting to note the Years At Company effect on Attrition", fill = "Attrition") +
-theme_minimal()
+ geom_smooth(span = 1L) +
+ scale_fill_hue() +
+ labs(title = "Distance From Home by Environmental Satisfaction / Attrition", subtitle = "Scatter Plot with Trend Line", caption = "Distance From Home appears to have a role in Attrition (more Distance From Home more Attrition)") +
+ coord_flip() +
+ theme_minimal()
 
-# Intersting to note the Work Life Balance effect on Attrition
+# let us see Attrition by Job Role
+# Observations: Job Roles of Sales Representative and Human Resources experience the most Attrition
 ggplot(df) +
- aes(x = MonthlyIncome, y = WorkLifeBalance, fill = Attrition) +
- geom_point(size = 1L, colour = "#0c4c8a") +
- geom_smooth(span = 0.75) +
- scale_fill_brewer(palette = "Set1") +
- labs(x = "Monthly Income", y = "Work Life Balance", title = "Monthly Income / Work Life Balance", subtitle = "Colored by Attrition", caption = "Intersting to note the Work Life Balance effect on Attrition", fill = "Attrition") +
-theme_minimal()
+ aes(x = JobRole, fill = Attrition) +
+ geom_bar(position = "fill") +
+ scale_fill_hue() +
+ labs(title = "Attrition by Job Role", subtitle = "BarPlot set to Fill (1.00 is considered 100%)", caption = "Job Roles of Sales Representative and Human Resources expereince the most Attrition") +
+ coord_flip() +
+ theme_minimal()
 
-# Intersting to note the Distance From Home effect on Attrition
+# let us see what Job Role tends to have the oldest 
+# Observations: Managers and Research Directors tend to be older
+ggplot(df) +
+ aes(x = JobRole, y = Age) +
+ geom_boxplot(fill = "#fde725") +
+ labs(x = "Job Role", title = "Age by Job Role", subtitle = "Boxplot", caption = "Managers and Research Directors tend to be older") +
+ coord_flip() +
+ theme_minimal()
+
+# let us see Monthly Income / Distance From Home
+# Observations:# Intersting to note the Distance From Home effect on Attrition
 ggplot(df) +
  aes(x = MonthlyIncome, y = DistanceFromHome, fill = Attrition) +
  geom_point(size = 1L, colour = "#0c4c8a") +
@@ -136,7 +173,8 @@ ggplot(df) +
  labs(x = "Monthly Income", y = "Distance From Home", title = "Monthly Income / Distance From Home", subtitle = "Colored by Attrition", caption = "Intersting to note the Distance From Home effect on Attrition", fill = "Attrition") +
 theme_minimal()
 
-# Intersting to note the Stock Option Level effect on Attrition
+# let us see Monthly Income / Stock Option Level
+# Observations:# Intersting to note the Stock Option Level effect on Attrition
 ggplot(df) +
  aes(x = MonthlyIncome, y = StockOptionLevel, fill = Attrition) +
  geom_point(size = 1L, colour = "#0c4c8a") +
@@ -144,7 +182,7 @@ ggplot(df) +
  scale_fill_brewer(palette = "Set1") +
  labs(x = "Monthly Income", y = "Stock Option Level", title = "Monthly Income / Stock Option Level", subtitle = "Colored by Attrition", caption = "Intersting to note the Stock Option Level effect on Attrition", fill = "Attrition") +
 theme_minimal()
-
+#
 ```
 
 
@@ -191,7 +229,7 @@ df3 <- df %>% dplyr::select(EnvironmentSatisfaction, MonthlyIncome, YearsAtCompa
 #Internal CV
 classifications = knn.cv(df3[,1:6],df3$Attrition, k = 3)
 confusionMatrix(classifications,df3$Attrition)
-#  K=3          ccuracy : 0.8207                **********************
+#  K=3         Accuracy : 0.8207                **********************
 #           Sensitivity : 0.9479                ***** Conclusion: this gives the best results in highest Specifity 
 #           Specificity : 0.1571                ****************  while very high accuracy and Sensitivity
 
@@ -216,13 +254,18 @@ df4$Gender = as.integer(factor(df4$Gender))
 #Internal CV
 classifications = knn.cv(df4[,1:8],df4$Attrition, k = 3)
 confusionMatrix(classifications,df4$Attrition)
-#  K=3          ccuracy : 0.8207
+#  K=3         Accuracy : 0.8207
 #           Sensitivity : 0.9479          
 #           Specificity : 0.1571  
 
-# NO appretiable difference than Try2
 
 
+# *** Observations:  
+#       Best Combination of variables: EnvironmentSatisfaction, MonthlyIncome, YearsAtCompany, StockOptionLevel, DistanceFromHome, WorkLifeBalance
+#       Best K: 3
+#       Accuracy : 0.8207                    
+#       Sensitivity : 0.9479                 
+#       Specificity : 0.1571                 
 ```
 
 ```{r}
@@ -241,7 +284,7 @@ write.csv(knnresults[,1:2], file="Case2PredictionsKeusseyan Attrition.csv")
 ```
 
 
-```{r}
+```{r warning=FALSE}
 # Predict Monthly Income
 # Plotting to look for patterns in the data ----
 
@@ -251,7 +294,7 @@ ggplot(df) +
  geom_point(size = 1L, colour = "#0c4c8a") +
  geom_smooth(span = 0.75) +
  scale_fill_brewer(palette = "Set1") +
- labs(x = "Total Working Years", y = "Monthly Income", title = "Total Working Years / Monthly Income", caption = "Intersting to note the Total Working Years effect on Monthly Income") +
+ labs(x = "Total Working Years", y = "Monthly Income", title = "Total Working Years / Monthly Income", caption = "Interesting to note the Total Working Years effect on Monthly Income (The greater Total Working Year the greater Monthly Income)") +
 theme_minimal()
 
 # Intersting to note the Job Level effect on Monthly Income
@@ -260,7 +303,7 @@ ggplot(df) +
  geom_point(size = 1L, colour = "#0c4c8a") +
  geom_smooth(span = 0.75) +
  scale_fill_brewer(palette = "Set1") +
- labs(x = "Job Level", y = "Monthly Income", title = "Job Level / Monthly Income", caption = "Intersting to note the Job Level effect on Monthly Income") +
+ labs(x = "Job Level", y = "Monthly Income", title = "Job Level / Monthly Income", caption = "Interesting to note the Job Level effect on Monthly Income (The greater the Job Level the greater Monthly Income)") +
 theme_minimal()
 
 ```
@@ -280,18 +323,34 @@ test<- dflm[-index,]
 
 # linear model
 linearmodel <- lm(MonthlyIncome ~ TotalWorkingYears + JobLevel + JobRole, data = train)
-summary(linearmodel) # Results: Adjusted R-squared:  0.9443
+summary(linearmodel) 
+# Oservation: GOOD!  We have an awesome Adjusted R-squared:  0.9443
+#                    we have an awesome p-value of < 2.2e-16                
+
 ols_plot_resid_fit(linearmodel)
 ols_plot_resid_lev(linearmodel)
+# Oservation: GOOD! we do not have wild outliers or high leverage points
+
 ols_plot_resid_qq(linearmodel)
+# Oservation: GOOD! Normality of Distribution - the points lie along a straight line.
+
 ols_plot_resid_hist(linearmodel)
+# Oservation: GOOD! Equal Standard Deviations - Bell Shaped Curve
+
 ols_plot_cooksd_bar(linearmodel)
+# Oservation: GOOD! We do not have any large  Cook's D points that could influence the fitted values
+# data point having a large cook's D indicates that the data point strongly influences the fitted values.
 
 # Predict
 predictions <- linearmodel %>% predict(test)
 
 # Get RMSE
-dfRMSE = RMSE(predictions,test$MonthlyIncome)   # RMSE of 1055.184
+dfRMSE = RMSE(predictions,test$MonthlyIncome)   
+dfRMSE
+
+# ***********
+# Oservation: EXCELLENT RMSE of just 1055.184
+#************
 
 # LM Predict
 dfpp <- read.csv("CaseStudy2CompSet No Salary.csv")
